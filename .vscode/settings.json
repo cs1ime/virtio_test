@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "./device_virtio/Cargo.toml"
+    ]
+}
