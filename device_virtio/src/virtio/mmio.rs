@@ -1,3 +1,5 @@
+#![no_std]
+
 
 pub enum VirtioDeviceType {
     None = 0,
@@ -32,8 +34,16 @@ impl VirtMmioRegs {
         self.device_id = id as u32;
         self.q_sel = 0;
     }
+}
 
+pub struct VirtMmio 
+{
+    inner: Arc<Mutex<VirtMmioInner>>
+}
 
+struct VirtioMmioInner {
+    id: usize,
+    regs: VirtMmioRegs,
 }
 
 
