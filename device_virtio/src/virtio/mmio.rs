@@ -46,4 +46,8 @@ struct VirtioMmioInner {
     regs: VirtMmioRegs,
 }
 
+pub fn virtio_mmio_blk_handler(vq: Virtq, blk: VirtioMmio)
+{
+    
+}
 

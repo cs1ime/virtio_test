@@ -48,6 +48,63 @@ pub struct Virtq {
     inner: Arc<Mutex<VirtqInner<'_>>>,
 }
 
+impl Virtq {
+    pub fn default() -> Virtq {
+        Virtq {
+            inner: Arc::new(Mutex::new(VirtqInner::default())),
+        }
+    }
+
+    pub fn reset(&self, index: usize) {
+        let mut inner = self.inner.lock();
+        inner.reset(index);
+    }
+
+    pub fn pop_avail_desc_idx(&self, avail_idx: u16) -> Option<u16> {
+        let mut inner = self.inner.lock();
+        match &inner.avail {
+            Some(avail) => {
+                if avail_idx == inner.last_avail_idx {
+                    return None;
+                }
+                let idx = inner.last_avail_idx as usize % inner.num;
+                let avail_desc_idx = avail.ring[idx];
+                inner.last_avail_idx = inner.last_avail_idx.wrapping_add(1);
+                return Some(avail_desc_idx);
+            }
+            None => {
+                println!("pop_avail_desc_idx: failed to avail table");
+                return None;
+            }
+        }
+    }
+
+
+    pub fn put_back_avail_desc_idx(&self) {
+        let mut inner = self.inner.lock();
+        match &inner.avail {
+            Some(_) => {
+                inner.last_avail_idx -= 1;
+            }
+            None => {
+                println!("put_back_avail_desc_idx: failed to avail table");
+            }
+        }
+    }
+
+    pub fn desc_is_writable(&self, idx: usize) -> bool {
+        let inner = self.inner.lock();
+        let desc_table = inner.desc_table.as_ref().unwrap();
+        desc_table[idx].flags & VIRTQ_DESC_F_WRITE as u16 != 0
+    }
+
+    pub fn desc_has_next(&self, idx: usize) -> bool {
+        let inner = self.inner.lock();
+        let desc_table = inner.desc_table.as_ref().unwrap();
+        desc_table[idx].flags & VIRTQ_DESC_F_NEXT != 0
+    }
+}
+
 pub struct VirtqInner<'a> {
     ready: usize,
     vq_index: usize,
